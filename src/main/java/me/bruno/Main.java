@@ -1,18 +1,13 @@
 package me.bruno;
 
 import me.bruno.nbs.*;
-import org.apache.commons.io.FilenameUtils;
 
 import javax.sound.midi.*;
-import javax.sound.midi.spi.MidiFileReader;
-import javax.sound.midi.spi.MidiFileWriter;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Main {
 
@@ -23,14 +18,21 @@ public class Main {
     public static String currentDir = System.getProperty("user.dir");
     public static File mainDirectory = new File(currentDir);
     public static void main(String[] args) {
-        for (File file : mainDirectory.listFiles((file, name) -> FilenameUtils.getExtension(name).equalsIgnoreCase("nbs"))) {
-            System.out.println("converting " + FilenameUtils.getBaseName(file.getPath()));
-            if (parse(file, FilenameUtils.getBaseName(file.getPath()))) {
-                System.out.println(FilenameUtils.getBaseName(file.getPath()) + " was successfully converted to " + FilenameUtils.getBaseName(file.getPath()) + ".mid");
-            } else {
-                System.out.println("An unexpected error occured");
+
+        if (Arrays.stream(mainDirectory.listFiles()).anyMatch(file -> FilenameUtils.getExtension(file.getName()).equalsIgnoreCase("nbs"))) {
+            for (File file : mainDirectory.listFiles((file, name) -> FilenameUtils.getExtension(name).equalsIgnoreCase("nbs"))) {
+                System.out.println("converting " + FilenameUtils.getBaseName(file.getPath()));
+                if (parse(file, FilenameUtils.getBaseName(file.getPath()))) {
+                    System.out.println(FilenameUtils.getBaseName(file.getPath()) + " was successfully converted to " + FilenameUtils.getBaseName(file.getPath()) + ".mid");
+                } else {
+                    System.out.println("An unexpected error occured");
+                }
             }
+        } else {
+            System.out.println("No files with extension .nbs found.");
         }
+
+
     }
 
     public static int mostRecentInt(Map<Byte, Integer> map) {
@@ -157,7 +159,11 @@ public class Main {
 
             byte customInstruments = dis.readByte();
 
+            Map<Byte, Byte> customInstrumentPitchMap = new HashMap<>();
+
             for (int i = 0; i < customInstruments; i++) {
+                byte soundPitch = dis.readByte();
+                customInstrumentPitchMap.put((byte) (vanillaInstruments + i), soundPitch);
                 instrumentMap.put((byte) (vanillaInstruments + i), mostRecentInt(instrumentMap));
             }
 
@@ -178,29 +184,47 @@ public class Main {
 
             File file = new File(FilenameUtils.getFullPath(f.getPath()) + fileName + ".mid");
 
-
             Sequence sequence =  new Sequence(Sequence.PPQ, 4);
 
-            Track track = sequence.createTrack();
 
-            long tempoToBpm = (long) ((tempo) * 15);
 
-            track.add(createSetTempoEvent(0, tempoToBpm));
-            for (byte values :instrumentMap.keySet()) {
-                track.add(makeEvent(SET_INSTRUMENT, instrumentMap.get(values), instrumentMap.get(values), 0, 0));
+            List<Track> tracks = new ArrayList<>();
+
+            for (int i = 0; i < instrumentMap.size(); i++) {
+                tracks.add(sequence.createTrack());
             }
+            long tempoToBpm = (long) ((tempo) * 15);
+            tracks.forEach(track -> track.add(createSetTempoEvent(0, tempoToBpm)));
+
+
+            for (byte values :instrumentMap.keySet()) {
+                tracks.get(instrumentMap.get(values)).add(makeEvent(SET_INSTRUMENT, instrumentMap.get(values), instrumentMap.get(values), 0, 0));
+            }
+
 
             for (int i = 0; i < instrumentLists.size(); i++) {
                 for (Note note : instrumentLists.get(i)) {
                     int val = instrumentMap.get(note.getInstrument());
-                    track.add(makeEvent(NOTE_ON, val, note.getKey(), note.getVelocity(), i));
-                    track.add(makeEvent(NOTE_OFF, val, note.getKey(), note.getVelocity(), i + 1));
+                    int finalNote = note.getKey()+ 21;
+                    switch (note.getInstrument()) {
+                        case 1, 12 -> finalNote = finalNote - 24;
+                        case 5 -> finalNote = finalNote - 12;
+                        case 6, 8 -> finalNote = finalNote + 12;
+                        case 7, 9 -> finalNote = finalNote + 24;
+                    }
+                    if (note.getInstrument() > vanillaInstruments-1) {
+                            finalNote = finalNote - (customInstrumentPitchMap.get(note.getInstrument()) - 45);
+                    }
+
+
+                    tracks.get(val).add(makeEvent(NOTE_ON, val, finalNote, note.getVelocity(), i));
+                    tracks.get(val).add(makeEvent(NOTE_OFF, val, finalNote, note.getVelocity(), i + 1));
                 }
             }
             if (file.exists()) {
                 file.delete();
             }
-            MidiSystem.write(sequence, 0, file);
+            MidiSystem.write(sequence, 1, file);
             file.createNewFile();
             return true;
         } catch (Exception e) {

@@ -208,36 +208,6 @@ public class Main {
         }
     }
 
-    public static void midiTest() {
-        try {
-            Sequence sequence = new Sequence(Sequence.PPQ, 4);
-            Track track = sequence.createTrack();
-            track.add(createSetTempoEvent(0, 30));
-            track.add(makeEvent(SET_INSTRUMENT, 1, 0, 0, 0));
-            track.add(makeEvent(NOTE_ON, 1, 39, 100, 0));
-            track.add(makeEvent(NOTE_OFF, 1, 39,100, 1));
-            track.add(makeEvent(NOTE_ON, 2, 39, 100, 1));
-            track.add(makeEvent(NOTE_OFF, 2, 39,100, 2));
-            track.add(makeEvent(NOTE_ON, 3, 39, 100, 2));
-            track.add(makeEvent(NOTE_OFF, 3, 39,100, 3));
-            track.add(makeEvent(NOTE_ON, 4, 39, 100, 3));
-            track.add(makeEvent(NOTE_OFF, 4, 39,100, 4));
-            File file = new File(mainDirectory + "\\q.mid");
-
-
-            if (file.exists()) {
-                file.delete();
-            }
-
-            MidiSystem.write(sequence, 1, file);
-            file.createNewFile();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-    }
-
     public static MidiEvent makeEvent(int command, int channel, int value1, int value2, int tick) {
 
         MidiEvent event = null;

@@ -1,2 +1,6 @@
 # Project exclude paths
+.idea
+*.jar
+*.nbs
+*.mid
 /target/

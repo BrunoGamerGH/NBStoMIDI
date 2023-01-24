@@ -23,13 +23,14 @@ public class Main {
     public static String currentDir = System.getProperty("user.dir");
     public static File mainDirectory = new File(currentDir);
     public static void main(String[] args) {
-
         for (File file : mainDirectory.listFiles((file, name) -> FilenameUtils.getExtension(name).equalsIgnoreCase("nbs"))) {
-
-            parse(file, FilenameUtils.getBaseName(file.getPath()));
+            System.out.println("converting " + FilenameUtils.getBaseName(file.getPath()));
+            if (parse(file, FilenameUtils.getBaseName(file.getPath()))) {
+                System.out.println(FilenameUtils.getBaseName(file.getPath()) + " was successfully converted to " + FilenameUtils.getBaseName(file.getPath()) + ".mid");
+            } else {
+                System.out.println("An unexpected error occured");
+            }
         }
-
-
     }
 
     public static int mostRecentInt(Map<Byte, Integer> map) {
@@ -38,7 +39,7 @@ public class Main {
 
 
 
-    public static File parse(File f, String fileName) {
+    public static boolean parse(File f, String fileName) {
 
         try {
             InputStream stream = Files.newInputStream(f.toPath());
@@ -201,10 +202,10 @@ public class Main {
             }
             MidiSystem.write(sequence, 0, file);
             file.createNewFile();
-            return file;
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return false;
         }
     }
 

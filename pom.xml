@@ -6,7 +6,7 @@
 
     <groupId>me.bruno</groupId>
     <artifactId>nbstomidi</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
 
     <properties>
         <maven.compiler.source>19</maven.compiler.source>

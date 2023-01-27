@@ -162,9 +162,17 @@ public class Main {
             Map<Byte, Byte> customInstrumentPitchMap = new HashMap<>();
 
             for (int i = 0; i < customInstruments; i++) {
+                String instrumentName = FileReader.readString(dis);
+                String soundFile = FileReader.readString(dis);
                 byte soundPitch = dis.readByte();
+                boolean pressKey = MathUtils.bitToBoolean(dis.readByte());
                 customInstrumentPitchMap.put((byte) (vanillaInstruments + i), soundPitch);
-                instrumentMap.put((byte) (vanillaInstruments + i), mostRecentInt(instrumentMap));
+                if (instrumentMap.isEmpty()) {
+                    instrumentMap.put((byte) (vanillaInstruments + i),0);
+                } else if (!instrumentMap.containsKey((byte) (vanillaInstruments + i))) {
+                    instrumentMap.put((byte) (vanillaInstruments + i), mostRecentInt(instrumentMap) + 1);
+                }
+
             }
 
 
@@ -189,20 +197,19 @@ public class Main {
 
 
             List<Track> tracks = new ArrayList<>();
-
             for (int i = 0; i < instrumentMap.size(); i++) {
                 tracks.add(sequence.createTrack());
             }
             long tempoToBpm = (long) ((tempo) * 15);
             tracks.forEach(track -> track.add(createSetTempoEvent(0, tempoToBpm)));
 
-
-            for (byte values :instrumentMap.keySet()) {
-                tracks.get(instrumentMap.get(values)).add(makeEvent(SET_INSTRUMENT, instrumentMap.get(values), instrumentMap.get(values), 0, 0));
+            for (int i = 0; i < instrumentMap.size(); i++) {
+                tracks.get(i).add(makeEvent(SET_INSTRUMENT, i, i, 0, 0));
             }
 
-
+            System.out.println(instrumentMap);
             for (int i = 0; i < instrumentLists.size(); i++) {
+
                 for (Note note : instrumentLists.get(i)) {
                     int val = instrumentMap.get(note.getInstrument());
                     int finalNote = note.getKey()+ 21;
@@ -212,7 +219,7 @@ public class Main {
                         case 6, 8 -> finalNote = finalNote + 12;
                         case 7, 9 -> finalNote = finalNote + 24;
                     }
-                    if (note.getInstrument() > vanillaInstruments-1) {
+                    if (note.getInstrument() >= vanillaInstruments) {
                             finalNote = finalNote - (customInstrumentPitchMap.get(note.getInstrument()) - 45);
                     }
 

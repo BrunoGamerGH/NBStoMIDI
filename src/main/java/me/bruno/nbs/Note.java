@@ -33,6 +33,10 @@ public class Note {
         return velocity;
     }
 
+    public void setVelocity(byte velocity) {
+        this.velocity = velocity;
+    }
+
     public byte getPanning() {
         return panning;
     }

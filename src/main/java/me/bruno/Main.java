@@ -154,6 +154,7 @@ public class Main {
                     layerStereo = dis.readByte();
                 }
                 currentLayer.setStereo(layerStereo);
+                currentLayer.updateNotes();
             }
 
 

@@ -79,4 +79,13 @@ public class Layer {
     public static Layer getFromNumber(List<Layer> layers, short number) {
         return layers.stream().filter(layer -> layer.getLayerNumber() == number).findFirst().orElse(null);
     }
+
+    public void updateNotes() {
+
+        for (Note note : notes) {
+            byte finalVelo = (byte) ((getVolume()/100f) * note.getVelocity());
+            note.setVelocity(finalVelo);
+        }
+
+    }
 }

@@ -206,8 +206,6 @@ public class Main {
             for (int i = 0; i < instrumentMap.size(); i++) {
                 tracks.get(i).add(makeEvent(SET_INSTRUMENT, i, i, 0, 0));
             }
-
-            System.out.println(instrumentMap);
             for (int i = 0; i < instrumentLists.size(); i++) {
 
                 for (Note note : instrumentLists.get(i)) {
